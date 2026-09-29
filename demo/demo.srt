@@ -1,0 +1,45 @@
+1
+00:00:00,500 --> 00:00:03,200
+Bienvenue dans SRT Reader, le lecteur de transcription synchronisée.
+
+2
+00:00:03,400 --> 00:00:07,000
+Charge un média à gauche, un fichier .srt à droite,
+et le texte suit la lecture tout seul.
+
+3
+00:00:07,200 --> 00:00:11,500
+La réplique en cours reste toujours centrée :
+tu n'as jamais besoin de faire défiler pour la retrouver.
+
+4
+00:00:11,700 --> 00:00:15,000
+ANIMATEUR: Les intervenants détectés sont affichés en couleur.
+
+5
+00:00:15,200 --> 00:00:19,800
+Sélectionne n'importe quel passage à la souris puis Ctrl+C :
+le clic ne déclenche aucun saut quand du texte est sélectionné.
+
+6
+00:00:20,000 --> 00:00:24,000
+Clique sur une réplique, ou sur son horodatage,
+pour sauter directement à ce moment du média.
+
+7
+00:00:24,200 --> 00:00:28,500
+Appuie sur B pour boucler la réplique en cours :
+pratique pour retranscrire un passage difficile.
+
+8
+00:00:28,700 --> 00:00:32,000
+Le surlignage mot par mot suit le rythme de la parole.
+
+9
+00:00:32,200 --> 00:00:36,500
+Si le sous-titrage est décalé, ajuste la synchro
+dans le menu Options, par pas de 0,1 seconde.
+
+10
+00:00:36,700 --> 00:00:40,000
+Bonne écoute, et bonne transcription.
