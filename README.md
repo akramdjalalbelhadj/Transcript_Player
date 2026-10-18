@@ -18,11 +18,13 @@ Tu peux aussi **glisser-déposer les deux fichiers d'un coup** n'importe où sur
 
 Un exemple est fourni dans `demo/` (`demo.srt` + `demo.wav` + `demo-video.mp4`) pour essayer tout de suite.
 
-> Si ton navigateur bloque une fonction en `file://` (rare, surtout la copie), sers le dossier localement :
+> Si ton navigateur bloque une fonction en `file://` (rare, surtout la copie), lance plutôt :
 > ```bash
-> python -m http.server 8765
+> ./start.sh            # port 8765, ouvre le navigateur
+> ./start.sh 9000       # autre port
+> ./start.sh --no-open  # sans ouvrir le navigateur
 > ```
-> puis ouvre `http://localhost:8765`.
+> Le script sert le dossier en local (`127.0.0.1` uniquement) avec Python, ou Node à défaut, et ouvre `http://localhost:8765`. `Ctrl+C` pour l'arrêter.
 
 ---
 
@@ -38,14 +40,20 @@ Un exemple est fourni dans `demo/` (`demo.srt` + `demo.wav` + `demo-video.mp4`) 
 - Sélectionne n'importe quel passage à la souris et fais `Ctrl+C` : **tant que du texte est sélectionné, le défilement automatique se met en pause** et le clic ne déclenche aucun saut. Rien ne bouge sous ta sélection.
 - Bouton **copier** sur chaque réplique (au survol), touche `C` pour copier la réplique en cours.
 - **Tout copier** : la transcription entière (ou la sélection en cours si tu en as une).
-- Export **`.txt`** (avec horodatages) et **`.srt`** (avec le décalage de synchro et tes corrections appliqués).
+- Bouton **Exporter .srt** (en haut de la transcription) : télécharge `<nom>-corrige.srt` avec le décalage de synchro, tes corrections et tes suppressions appliqués, répliques renumérotées.
+- Export **`.txt`** (avec horodatages) dans **Options**.
 
 **Corriger le texte**
-- Bouton **crayon** sur chaque réplique (au survol), ou touche `E` pour la réplique en cours.
+- **Double-clic sur le texte** d’une réplique, bouton **crayon** (au survol), ou touche `E` pour la réplique en cours.
 - `Entrée` valide, `Maj+Entrée` passe à la ligne, `Échap` annule, cliquer ailleurs valide. La lecture se met en pause pendant l’édition et reprend ensuite.
 - Le nom de l’intervenant (`NOM:` en début de texte) se corrige de la même façon.
-- Les répliques corrigées sont marquées d’un point, et un badge compte les modifications pas encore exportées. Pour les garder : **Options › Exporter en .srt**.
 - Seul le texte est modifiable, les horodatages ne changent pas.
+
+**Supprimer une réplique parasite** (bruit, quelqu’un qui parle près du micro…)
+- Bouton **corbeille** sur chaque réplique (au survol), ou touche `Suppr` pour la réplique en cours.
+- Une erreur ? **Annuler** dans la notification, ou `Ctrl+Z` (plusieurs fois pour remonter plusieurs suppressions).
+
+Les répliques corrigées sont marquées d’un point, et un badge compte les modifications (corrections + suppressions) pas encore exportées : un clic dessus télécharge le `.srt` corrigé.
 
 **Navigation**
 - Clic sur une réplique (ou son horodatage) → le média saute à ce moment.
@@ -74,6 +82,8 @@ Un exemple est fourni dans `demo/` (`demo.srt` + `demo.wav` + `demo-video.mp4`) 
 | `B` | Boucler la réplique en cours |
 | `C` | Copier la réplique en cours |
 | `E` | Modifier le texte de la réplique en cours |
+| `Suppr` | Supprimer la réplique en cours |
+| `Ctrl+Z` | Annuler la dernière suppression |
 | `S` | Suivi automatique on / off |
 | `↑` `↓` | Vitesse de lecture ±5 % |
 | `M` | Couper le son |

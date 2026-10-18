@@ -74,6 +74,7 @@
     offsetVal: $('offsetVal'),
     exportTxt: $('exportTxt'),
     exportSrt: $('exportSrt'),
+    exportSrtBtn: $('exportSrtBtn'),
 
     workspace: $('workspace'),
     splitter: $('splitter'),
@@ -106,7 +107,8 @@
     programmaticScroll: 0,
     editingIdx: -1,      // réplique en cours de modification
     editResume: false,   // relancer la lecture après la modification
-    unsaved: new Set(),  // répliques modifiées depuis le dernier export .srt
+    unsaved: new Set(),  // répliques (objets) modifiées ou supprimées depuis le dernier export .srt
+    trash: [],           // répliques supprimées, pour Annuler : { cue, li, at, wasUnsaved }
   };
 
   const PREF_KEY = 'srtreader.prefs.v1';
@@ -137,8 +139,17 @@
   }
 
   let toastTimer = null;
-  function toast(msg, ms = 1900) {
+  /** `action` (facultatif) : { label, run } → bouton dans le toast (ex. « Annuler »). */
+  function toast(msg, ms = 1900, action) {
     el.toast.textContent = msg;
+    if (action) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'toast-action';
+      b.textContent = action.label;
+      b.addEventListener('click', () => { el.toast.hidden = true; action.run(); });
+      el.toast.append(b);
+    }
     el.toast.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { el.toast.hidden = true; }, ms);
@@ -235,7 +246,7 @@
   }
 
   function loadSubFile(file) {
-    if (state.unsaved.size && !confirm(`${state.unsaved.size} réplique(s) modifiée(s) n'ont pas été exportées.\nCharger « ${file.name} » quand même ?`)) return;
+    if (state.unsaved.size && !confirm(`${state.unsaved.size} modification(s) n'ont pas été exportées.\nCharger « ${file.name} » quand même ?`)) return;
     const reader = new FileReader();
     reader.onload = () => {
       const text = decodeBytes(reader.result);
@@ -243,6 +254,7 @@
       if (!cues.length) { toast('Aucune réplique trouvée dans ce fichier.', 3200); return; }
       state.editingIdx = -1;
       state.unsaved.clear();
+      state.trash = [];
       state.cues = cues;
       state.srtFileName = file.name;
       el.srtName.textContent = file.name;
@@ -408,7 +420,13 @@
       copy.title = 'Copier cette réplique';
       copy.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
 
-      actions.append(edit, copy);
+      const del = document.createElement('button');
+      del.className = 'cue-delete';
+      del.type = 'button';
+      del.title = 'Supprimer cette réplique (Suppr)';
+      del.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+
+      actions.append(edit, copy, del);
       li.append(time, txt, actions);
       frag.appendChild(li);
       state.cueEls.push(li);
@@ -906,10 +924,17 @@
   /*  Interactions sur la transcription                                   */
   /* ==================================================================== */
 
+  // réplique visée par le 1er clic d'un double-clic : le saut peut faire défiler la liste
+  // entre les deux clics, le 2e clic tomberait alors sur une autre réplique
+  let clickedIdx = -1;
+
   el.cues.addEventListener('click', (e) => {
     const li = e.target.closest('.cue');
     if (!li || li.classList.contains('editing')) return;
     const i = +li.dataset.i;
+
+    // bouton supprimer (un double-clic ne doit pas emporter la réplique suivante)
+    if (e.target.closest('.cue-delete')) { if (e.detail <= 1) deleteCue(i); return; }
 
     // bouton modifier
     if (e.target.closest('.cue-edit')) { startEdit(i); return; }
@@ -923,6 +948,10 @@
       return;
     }
 
+    // 2e clic d'un double-clic : c'est le double-clic qui décide (modifier)
+    if (e.detail > 1) return;
+    clickedIdx = i;
+
     // horodatage : toujours un saut
     if (e.target.closest('.cue-time')) { seekToCue(i, true); return; }
 
@@ -932,9 +961,12 @@
     seekToCue(i, true);
   });
 
+  // double-clic sur le texte = modifier la réplique
   el.cues.addEventListener('dblclick', (e) => {
     const li = e.target.closest('.cue');
-    if (li && !li.classList.contains('editing')) seekToCue(+li.dataset.i, true);
+    if (!li || li.classList.contains('editing')) return;
+    if (e.target.closest('.cue-actions, .cue-time')) return;
+    startEdit(clickedIdx !== -1 ? clickedIdx : +li.dataset.i);
   });
 
   /* ------------------------------------------- modification du texte */
@@ -1031,15 +1063,76 @@
       cue.speaker = speaker;
       cue.words = splitWords(cue.text, cue.start, cue.end);
       cue.edited = true;
-      state.unsaved.add(i);
+      state.unsaved.add(cue);
     }
     closeEditor(changed);
+  }
+
+  /* ------------------------------------------- suppression d'une réplique */
+
+  /** Retire une réplique (bruit, voix de passage…). Annulable : bouton du toast ou Ctrl+Z. */
+  function deleteCue(i) {
+    const cue = state.cues[i];
+    if (!cue) return;
+    if (state.editingIdx !== -1) commitEdit();
+
+    const li = state.cueEls[i];
+    state.trash.push({ cue, li, at: i, wasUnsaved: state.unsaved.has(cue) });
+    state.cues.splice(i, 1);
+    state.cueEls.splice(i, 1);
+    li.remove();
+    state.unsaved.add(cue);
+    reindexFrom(i);
+    afterCuesChanged();
+    toast('Réplique supprimée', 5000, { label: 'Annuler', run: undoDelete });
+  }
+
+  function undoDelete() {
+    const t = state.trash.pop();
+    if (!t) return;
+    if (state.editingIdx !== -1) commitEdit();
+
+    const at = Math.min(t.at, state.cues.length);
+    state.cues.splice(at, 0, t.cue);
+    state.cueEls.splice(at, 0, t.li);
+    el.cues.insertBefore(t.li, state.cueEls[at + 1] || null);
+    if (!t.wasUnsaved) state.unsaved.delete(t.cue);
+
+    // le décalage ou la recherche ont pu changer entre-temps
+    t.li.classList.remove('active', 'past', 'near');
+    const time = t.li.querySelector('.cue-time');
+    time.textContent = fmtTime(t.cue.start + state.offset);
+    time.title = `Aller à ${fmtTime(t.cue.start + state.offset)}`;
+    paintCueText(t.cue, t.li.querySelector('.cue-text'));
+
+    reindexFrom(at);
+    afterCuesChanged();
+    toast('Réplique restaurée');
+  }
+
+  function reindexFrom(k) {
+    for (; k < state.cues.length; k++) {
+      state.cues[k].index = k;
+      state.cueEls[k].dataset.i = k;
+    }
+  }
+
+  function afterCuesChanged() {
+    clickedIdx = -1;
+    state.activeIdx = -1;      // force le recalcul de la réplique active
+    state.lastWordIdx = -1;
+    el.scriptEmpty.hidden = state.cues.length > 0;
+    sync(false);
+    refreshSearchMatches();
+    updateMeta();
+    updateEditBadge();
+    buildTimelineMarkers();
   }
 
   function updateEditBadge() {
     const n = state.unsaved.size;
     el.editBadge.hidden = n === 0;
-    el.editBadge.textContent = n === 1 ? '1 réplique modifiée · à exporter' : `${n} répliques modifiées · à exporter`;
+    el.editBadge.textContent = n === 1 ? '1 modification · exporter en .srt' : `${n} modifications · exporter en .srt`;
   }
 
   window.addEventListener('beforeunload', (e) => {
@@ -1100,13 +1193,20 @@
     closeMenu();
   });
 
-  el.exportSrt.addEventListener('click', () => {
+  function exportSrt() {
+    closeMenu();
     if (!state.cues.length) return toast('Aucune transcription chargée.');
+    if (state.editingIdx !== -1) commitEdit();
     download(baseName() + '-corrige.srt', toSrt());
     state.unsaved.clear();
+    state.trash = [];          // le fichier exporté fait foi : plus rien à annuler
     updateEditBadge();
-    closeMenu();
-  });
+    toast(`${state.cues.length} répliques exportées en .srt`);
+  }
+
+  el.exportSrt.addEventListener('click', exportSrt);
+  el.exportSrtBtn.addEventListener('click', exportSrt);
+  el.editBadge.addEventListener('click', exportSrt);
 
   /* ==================================================================== */
   /*  Recherche                                                           */
@@ -1316,6 +1416,12 @@
     }
     if (e.key === 'Escape' && !el.helpModal.hidden) { el.helpModal.hidden = true; return; }
     if (isTyping(e.target)) return;
+    // Ctrl/Cmd + Z : annuler la dernière suppression (hors saisie : là, Ctrl+Z reste celui du navigateur)
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z') && state.trash.length) {
+      e.preventDefault();
+      undoDelete();
+      return;
+    }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
 
     switch (e.key) {
@@ -1336,6 +1442,9 @@
       case 'e': case 'E':
         // preventDefault : sinon le « e » est tapé dans la zone qui vient de s'ouvrir
         if (state.activeIdx >= 0) { e.preventDefault(); startEdit(state.activeIdx); }
+        break;
+      case 'Delete':
+        if (state.activeIdx >= 0) { e.preventDefault(); deleteCue(state.activeIdx); }
         break;
       case 's': case 'S': el.followBtn.click(); break;
       case 'm': case 'M': el.muteBtn.click(); break;

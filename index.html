@@ -169,6 +169,10 @@
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
           <span>Tout copier</span>
         </button>
+        <button class="tool" id="exportSrtBtn" title="Télécharger les sous-titres corrigés (.srt)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <span>Exporter .srt</span>
+        </button>
 
         <div class="menu-wrap">
           <button class="tool" id="moreBtn" title="Options" aria-expanded="false">
@@ -211,7 +215,7 @@
       <span id="wordCount">0 mots</span>
       <span class="dot">•</span>
       <span id="srtDur">—</span>
-      <span class="edit-badge" id="editBadge" hidden title="Modifications pas encore exportées — Options › Exporter en .srt"></span>
+      <button type="button" class="edit-badge" id="editBadge" hidden title="Modifications pas encore exportées — cliquer pour télécharger le .srt corrigé"></button>
     </div>
 
     <div class="script-scroll" id="scriptScroll" tabindex="0">
@@ -252,6 +256,8 @@
       <li><kbd>B</kbd><span>Boucler la réplique active</span></li>
       <li><kbd>C</kbd><span>Copier la réplique active</span></li>
       <li><kbd>E</kbd><span>Modifier le texte de la réplique active</span></li>
+      <li><kbd>Suppr</kbd><span>Supprimer la réplique active</span></li>
+      <li><kbd>Ctrl</kbd> <kbd>Z</kbd><span>Annuler la dernière suppression</span></li>
       <li><kbd>S</kbd><span>Suivi automatique on / off</span></li>
       <li><kbd>&uarr;</kbd> <kbd>&darr;</kbd><span>Vitesse de lecture ±5 %</span></li>
       <li><kbd>M</kbd><span>Couper le son</span></li>
@@ -259,7 +265,7 @@
       <li><kbd>Ctrl</kbd> <kbd>F</kbd><span>Rechercher dans le texte</span></li>
       <li><kbd>Entrée</kbd><span>Résultat de recherche suivant</span></li>
     </ul>
-    <p class="modal-foot">Clic sur une réplique = aller à ce moment. Sélectionne le texte à la souris pour le copier normalement : quand du texte est sélectionné, le clic ne déclenche aucun saut.<br />Crayon (au survol) ou <kbd>E</kbd> pour corriger une réplique : <kbd>Entrée</kbd> valide, <kbd>Maj</kbd>+<kbd>Entrée</kbd> va à la ligne, <kbd>Échap</kbd> annule.</p>
+    <p class="modal-foot">Clic sur une réplique = aller à ce moment. Sélectionne le texte à la souris pour le copier normalement : quand du texte est sélectionné, le clic ne déclenche aucun saut.<br />Double-clic sur le texte, crayon (au survol) ou <kbd>E</kbd> pour corriger une réplique : <kbd>Entrée</kbd> valide, <kbd>Maj</kbd>+<kbd>Entrée</kbd> va à la ligne, <kbd>Échap</kbd> annule.<br />Corbeille (au survol) ou <kbd>Suppr</kbd> pour retirer une réplique parasite (bruit, voix de passage) ; <kbd>Ctrl</kbd>+<kbd>Z</kbd> la remet. <b>Exporter .srt</b> télécharge le fichier corrigé.</p>
   </div>
 </div>
 

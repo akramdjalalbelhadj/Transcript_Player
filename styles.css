@@ -17,6 +17,7 @@
   --active-bg:     rgba(91, 140, 255, .12);
   --warm:          #ffc86b;
   --ok:            #4fd18b;
+  --danger:        #ff6b6b;
   --shadow:        0 18px 48px rgba(0, 0, 0, .45);
   --radius:        14px;
   --script-font:   18px;
@@ -35,6 +36,7 @@
   --accent-soft:   rgba(47, 98, 230, .12);
   --accent-glow:   rgba(47, 98, 230, .28);
   --active-bg:     rgba(47, 98, 230, .09);
+  --danger:        #d93838;
   --shadow:        0 16px 40px rgba(20, 32, 60, .14);
 }
 
@@ -600,7 +602,7 @@ input[type="range"]::-moz-range-thumb {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 12px;
-  padding: 9px 70px 9px 10px;
+  padding: 9px 100px 9px 10px;
   border-radius: 11px;
   border: 1px solid transparent;
   transition: background .18s, opacity .25s, border-color .18s;
@@ -677,14 +679,14 @@ input[type="range"]::-moz-range-thumb {
 }
 .cue.active .w.todo { color: var(--text-dim); }
 
-/* boutons de la réplique (modifier / copier) */
+/* boutons de la réplique (modifier / copier / supprimer) */
 .cue-actions {
   position: absolute;
   top: 7px; right: 7px;
   display: flex;
   gap: 4px;
 }
-.cue-copy, .cue-edit {
+.cue-copy, .cue-edit, .cue-delete {
   display: grid;
   place-items: center;
   width: 26px; height: 26px;
@@ -695,9 +697,10 @@ input[type="range"]::-moz-range-thumb {
   opacity: 0;
   transition: opacity .14s, color .14s, border-color .14s;
 }
-.cue:hover .cue-copy, .cue:hover .cue-edit,
-.cue-copy:focus-visible, .cue-edit:focus-visible { opacity: 1; }
+.cue:hover .cue-copy, .cue:hover .cue-edit, .cue:hover .cue-delete,
+.cue-copy:focus-visible, .cue-edit:focus-visible, .cue-delete:focus-visible { opacity: 1; }
 .cue-copy:hover, .cue-edit:hover { color: var(--accent); border-color: var(--accent); }
+.cue-delete:hover { color: var(--danger); border-color: var(--danger); }
 .cue-copy.done { color: var(--ok); border-color: var(--ok); opacity: 1; }
 .cue.editing .cue-actions { display: none; }
 
@@ -756,11 +759,14 @@ input[type="range"]::-moz-range-thumb {
   margin-left: auto;
   padding: 2px 8px;
   border-radius: 99px;
+  border: none;
   background: rgba(255, 200, 107, .16);
   color: var(--warm);
+  font-size: inherit;
   font-weight: 600;
   white-space: nowrap;
 }
+.edit-badge:hover { background: rgba(255, 200, 107, .3); }
 
 /* recherche */
 mark.hit {
@@ -886,6 +892,16 @@ kbd {
   font-weight: 600;
   box-shadow: var(--shadow);
   animation: pop .16s ease;
+}
+.toast-action {
+  margin-left: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* ============================ Responsive ============================ */
