@@ -188,6 +188,18 @@ button { cursor: pointer; }
 .stage.has-video #player { display: block; }
 .stage.has-video { background: #000; }
 
+/* mode écoute : la vidéo continue de jouer, seule l'image est masquée */
+.stage.has-video.listen {
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--bg-elev-2), var(--bg-elev) 70%);
+}
+.stage.has-video.listen #player {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .stage-empty, .audio-card, .script-empty {
   display: grid;
   place-items: center;
@@ -355,6 +367,10 @@ body.playing .ctl-play .ico-pause { display: block; }
   border-color: var(--accent);
   background: var(--accent-soft);
 }
+
+#listenBtn .ico-eye-off { display: none; }
+#listenBtn[aria-pressed="true"] .ico-eye     { display: none; }
+#listenBtn[aria-pressed="true"] .ico-eye-off { display: block; }
 
 #muteBtn .ico-mute { display: none; }
 body.muted #muteBtn .ico-vol  { display: none; }

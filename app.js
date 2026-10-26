@@ -34,6 +34,7 @@
     prevCue: $('prevCue'),
     nextCue: $('nextCue'),
     loopBtn: $('loopBtn'),
+    listenBtn: $('listenBtn'),
     rateRange: $('rateRange'),
     rateInput: $('rateInput'),
     rateDown: $('rateDown'),
@@ -109,6 +110,7 @@
     editResume: false,   // relancer la lecture après la modification
     unsaved: new Set(),  // répliques (objets) modifiées ou supprimées depuis le dernier export .srt
     trash: [],           // répliques supprimées, pour Annuler : { cue, li, at, wasUnsaved }
+    listen: false,       // mode écoute : vidéo masquée, animation audio affichée
   };
 
   const PREF_KEY = 'srtreader.prefs.v1';
@@ -233,6 +235,8 @@
     const isVideo = kind === 'video';
     el.stage.classList.toggle('has-video', isVideo);
     el.stage.classList.toggle('has-audio', !isVideo);
+    el.listenBtn.hidden = !isVideo;
+    setListen(false);
     el.audioCard.hidden = isVideo;
     el.audioTitle.textContent = file.name;
 
@@ -820,6 +824,21 @@
     el.loopBtn.setAttribute('aria-pressed', String(state.loop));
     toast(state.loop ? 'Boucle sur la réplique active' : 'Boucle désactivée');
     savePrefs();
+  });
+
+  /** Mode écoute (vidéo seulement) : l'image est masquée, la lecture continue au même endroit. */
+  function setListen(on) {
+    state.listen = on;
+    el.stage.classList.toggle('listen', on);
+    el.listenBtn.setAttribute('aria-pressed', String(on));
+    el.listenBtn.title = on ? 'Réafficher la vidéo (V)' : 'Mode écoute : masquer la vidéo (V)';
+    if (el.stage.classList.contains('has-video')) el.audioCard.hidden = !on;
+  }
+
+  el.listenBtn.addEventListener('click', () => {
+    if (!el.stage.classList.contains('has-video')) return;
+    setListen(!state.listen);
+    toast(state.listen ? 'Mode écoute : vidéo masquée' : 'Vidéo réaffichée');
   });
 
   /* ------------------------------------------------ vitesse de lecture */
@@ -1447,6 +1466,7 @@
         if (state.activeIdx >= 0) { e.preventDefault(); deleteCue(state.activeIdx); }
         break;
       case 's': case 'S': el.followBtn.click(); break;
+      case 'v': case 'V': el.listenBtn.click(); break;
       case 'm': case 'M': el.muteBtn.click(); break;
       case 'f': case 'F': el.fsBtn.click(); break;
       case 'ArrowUp':   e.preventDefault(); stepRate(1, true); break;

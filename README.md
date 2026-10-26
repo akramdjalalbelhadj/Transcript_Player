@@ -60,6 +60,7 @@ Les répliques corrigées sont marquées d’un point, et un badge compte les mo
 - Barre de progression avec les répliques matérialisées, ±5 s / ±10 s.
 - **Vitesse de lecture de 25 % à 400 %** : curseur, boutons `−` / `+` (par pas de 5 %) ou saisie directe (`150`, `133 %`, `1,5x`…). Double-clic sur le curseur ou bouton `100 %` pour revenir à la normale.
 - **Boucle** sur la réplique en cours (`B`) — pratique pour retranscrire un passage difficile.
+- **Mode écoute** (`V`, bouton œil, vidéo uniquement) : masque l'image et affiche l'animation audio, la lecture continue ; re-cliquer réaffiche la vidéo là où elle en est.
 - **Recherche** dans toute la transcription, avec navigation entre les résultats.
 - **Décalage de synchro** par pas de 0,1 s si le `.srt` est décalé par rapport au média.
 
@@ -86,6 +87,7 @@ Les répliques corrigées sont marquées d’un point, et un badge compte les mo
 | `Ctrl+Z` | Annuler la dernière suppression |
 | `S` | Suivi automatique on / off |
 | `↑` `↓` | Vitesse de lecture ±5 % |
+| `V` | Mode écoute : masquer / réafficher la vidéo |
 | `M` | Couper le son |
 | `F` | Plein écran |
 | `Ctrl+F` | Rechercher dans le texte |
