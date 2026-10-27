@@ -2,13 +2,22 @@
 
 Lecteur **audio / vidéo + transcription synchronisée**, pensé pour lire, suivre et **copier-coller** du texte à n'importe quel moment de l'écoute.
 
-Tout se passe dans le navigateur : **aucun fichier n'est envoyé nulle part**, aucun serveur, aucune installation.
+Tout se passe dans le navigateur : **aucun fichier n'est envoyé nulle part**, aucune dépendance à installer.
 
 ---
 
 ## Démarrer
 
-Double-clique sur **`index.html`**. C'est tout.
+```bash
+./start.sh            # port 8765, ouvre le navigateur
+./start.sh 9000       # autre port
+./start.sh --no-open  # sans ouvrir le navigateur
+npm start             # équivalent de ./start.sh
+```
+
+Le script sert le dossier en local (`127.0.0.1` uniquement) avec Python, ou Node à défaut, et ouvre `http://localhost:8765`. `Ctrl+C` pour l'arrêter.
+
+> Le double-clic sur `index.html` ne suffit pas : le code est découpé en modules JavaScript (`import` / `export`), que les navigateurs refusent de charger depuis `file://`. Le serveur local ne fait que distribuer les fichiers à ton navigateur ; tes médias restent sur ta machine.
 
 Puis :
 1. bouton **Média** → ton `.mp4`, `.m4a`, `.mp3`…
@@ -17,14 +26,6 @@ Puis :
 Tu peux aussi **glisser-déposer les deux fichiers d'un coup** n'importe où sur la page.
 
 Un exemple est fourni dans `demo/` (`demo.srt` + `demo.wav` + `demo-video.mp4`) pour essayer tout de suite.
-
-> Si ton navigateur bloque une fonction en `file://` (rare, surtout la copie), lance plutôt :
-> ```bash
-> ./start.sh            # port 8765, ouvre le navigateur
-> ./start.sh 9000       # autre port
-> ./start.sh --no-open  # sans ouvrir le navigateur
-> ```
-> Le script sert le dossier en local (`127.0.0.1` uniquement) avec Python, ou Node à défaut, et ouvre `http://localhost:8765`. `Ctrl+C` pour l'arrêter.
 
 ---
 
@@ -113,8 +114,51 @@ ffmpeg -i entree.avi -c:v libx264 -c:a aac sortie.mp4
 
 ## Notes techniques
 
-- HTML / CSS / JavaScript natifs, **zéro dépendance**, zéro build.
-- `index.html` (structure) · `styles.css` (thèmes et mise en page) · `app.js` (analyse SRT, synchro, interactions).
+- HTML / CSS / JavaScript natifs (modules ES), **zéro dépendance**, zéro build.
 - Le média est lu via `URL.createObjectURL` : le fichier n'est jamais copié ni téléversé, même un fichier de plusieurs Go s'ouvre instantanément.
 - Le **surlignage mot par mot est une estimation** : un `.srt` ne contient pas le timing de chaque mot, la durée de la réplique est répartie proportionnellement à la longueur des mots. Le surlignage de la réplique, lui, est exact.
 - Le surlignage mot par mot est suspendu pendant une recherche (les deux se disputeraient le même texte).
+
+---
+
+## Architecture
+
+Le code est organisé **en couches** : chaque couche ne dépend que de celles du dessous, jamais l'inverse.
+
+```
+index.html              structure de la page
+src/
+├── main.js             point d'entrée : initialise chaque module d'interface
+├── core/               LOGIQUE MÉTIER PURE — aucun accès au DOM ni au navigateur, testée
+│   ├── subtitle-parser.js     SRT / VTT / SBV → répliques
+│   ├── cue.js                 réplique : nettoyage, intervenant, mots, recherche, correction
+│   ├── transcript-format.js   export .srt, texte brut, texte horodaté
+│   ├── time.js                formats de temps (00:00, 00:00:00,000)
+│   ├── playback-rate.js       vitesse : bornes, pas de 5 %, saisie libre
+│   ├── media-type.js          vidéo / audio / sous-titres d'après le fichier
+│   ├── encoding.js            UTF-8 ou Windows-1252
+│   └── settings.js            préférences : valeurs par défaut et validation
+├── infra/              ACCÈS AUX API DU NAVIGATEUR (stockage, presse-papiers, téléchargement)
+├── app/                ÉTAT PARTAGÉ
+│   ├── store.js               `settings` (sauvegardées) + `state` (session en cours)
+│   └── events.js              bus d'événements entre modules
+├── ui/                 INTERFACE — un module par zone de l'écran
+│   ├── player.js, timeline.js, speed-control.js     lecteur et contrôles
+│   ├── file-loader.js, options-menu.js, layout.js, theme.js, help-modal.js
+│   ├── keyboard.js            tous les raccourcis clavier, en un seul tableau
+│   └── transcript/            liste, synchro, suivi auto, édition, suppression, recherche, export
+└── styles/             une feuille par zone, assemblées par main.css
+tests/                  tests unitaires de core/ (node:test, sans dépendance)
+```
+
+**Règles suivies**
+- **`core/` est pur** : entrées → sorties, sans DOM. C'est là qu'est la logique délicate (analyse des formats, calculs de temps), et c'est ce qui est testé.
+- **Dépendances à sens unique** : `ui → app → infra / core`. Aucun import circulaire.
+- **Communication par événements** : un module appelle directement ceux dont il dépend ; pour prévenir les autres, il émet un événement (`media:time`, `cues:changed`, `setting:changed`…). Le lecteur, par exemple, ignore tout de la transcription : il annonce la position de lecture, la transcription s'y synchronise.
+- **Préférences centralisées** : toujours modifiées via `setSetting()`, qui sauvegarde et prévient les modules concernés.
+
+**Tests**
+
+```bash
+npm test        # Node 21 ou plus récent
+```

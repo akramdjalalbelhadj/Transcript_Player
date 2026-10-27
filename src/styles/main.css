@@ -1,0 +1,14 @@
+/* =========================================================
+   SRT Reader — feuille de style principale
+   Un fichier par zone de l'interface ; l'ordre compte
+   (base d'abord, responsive en dernier).
+   ========================================================= */
+
+@import url("base.css");
+@import url("topbar.css");
+@import url("layout.css");
+@import url("stage.css");
+@import url("controls.css");
+@import url("transcript.css");
+@import url("overlays.css");
+@import url("responsive.css");

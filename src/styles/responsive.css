@@ -1,0 +1,15 @@
+/* =========================================================
+   SRT Reader — adaptation petits écrans (toujours en dernier)
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 45%) 0 minmax(0, 55%);
+  }
+  .splitter { display: none; }
+  .pane-script { border-left: none; border-top: 1px solid var(--line); }
+  .loaders { width: 100%; order: 3; margin-left: 0; }
+  .topbar { flex-wrap: wrap; }
+  .cues { padding: 30vh 12px; }
+}

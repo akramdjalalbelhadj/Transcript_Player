@@ -7,7 +7,8 @@
 #     --no-open  ne pas ouvrir le navigateur automatiquement
 #
 #  Sert le dossier en local (127.0.0.1 uniquement) avec Python, sinon Node.
-#  Sans l'un ni l'autre, ouvre directement index.html (file://).
+#  Un serveur est indispensable : le code est en modules ES, que les
+#  navigateurs refusent de charger depuis file:// (double-clic sur index.html).
 #  Ctrl+C pour arrêter.
 # =========================================================================
 
@@ -18,7 +19,7 @@ OPEN=1
 for arg in "$@"; do
   case "$arg" in
     --no-open) OPEN=0 ;;
-    -h|--help) sed -n '3,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '3,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     ''|*[!0-9]*) echo "Argument inconnu : $arg (attendu : un numéro de port ou --no-open)" >&2; exit 1 ;;
     *) PORT="$arg" ;;
   esac
@@ -87,21 +88,26 @@ http.createServer((req, res) => {
 }).listen(port, "127.0.0.1");
 '
 
+# Serveur Python : le type MIME des .js est forcé, car sous Windows le registre
+# peut annoncer « text/plain », ce qui empêche le navigateur de charger les modules.
+PY_SERVER='
+import http.server, sys
+h = http.server.SimpleHTTPRequestHandler
+h.extensions_map.update({".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css"})
+http.server.test(HandlerClass=h, port=int(sys.argv[1]), bind="127.0.0.1")
+'
+
 if PY="$(find_python)"; then
   echo "SRT Reader → $URL   (serveur : $PY, Ctrl+C pour arrêter)"
-  "$PY" -m http.server "$PORT" --bind 127.0.0.1 >/dev/null 2>&1 &
+  "$PY" -c "$PY_SERVER" "$PORT" >/dev/null 2>&1 &
 elif command -v node >/dev/null 2>&1; then
   echo "SRT Reader → $URL   (serveur : node, Ctrl+C pour arrêter)"
   PORT="$PORT" node -e "$NODE_SERVER" &
 else
-  echo "Ni Python ni Node trouvé : ouverture directe de index.html."
-  echo "(La plupart des fonctions marchent ; si la copie est bloquée, installe Python ou Node.)"
-  OPEN=1
-  case "$(uname -s)" in
-    MINGW*|MSYS*|CYGWIN*) open_url "$(pwd -W)/index.html" ;;
-    *)                    open_url "file://$(pwd)/index.html" ;;
-  esac
-  exit 0
+  # le code est en modules ES : le navigateur refuse de les charger depuis file://
+  echo "Ni Python ni Node trouvé : impossible de servir l'application." >&2
+  echo "Installe l'un des deux (https://www.python.org ou https://nodejs.org), puis relance ./start.sh" >&2
+  exit 1
 fi
 
 SERVER_PID=$!

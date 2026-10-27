@@ -1,0 +1,64 @@
+/* =========================================================
+   SRT Reader — variables de thème et styles de base
+   ========================================================= */
+
+:root {
+  --bg:            #0b0e14;
+  --bg-elev:       #11151f;
+  --bg-elev-2:     #161c28;
+  --line:          #232b3a;
+  --line-soft:     #1b2130;
+  --text:          #e7ecf5;
+  --text-dim:      #98a3b8;
+  --text-faint:    #64708a;
+  --accent:        #5b8cff;
+  --accent-soft:   rgba(91, 140, 255, .16);
+  --accent-glow:   rgba(91, 140, 255, .35);
+  --active-bg:     rgba(91, 140, 255, .12);
+  --warm:          #ffc86b;
+  --ok:            #4fd18b;
+  --danger:        #ff6b6b;
+  --shadow:        0 18px 48px rgba(0, 0, 0, .45);
+  --radius:        14px;
+  --script-font:   18px;
+}
+
+:root[data-theme="light"] {
+  --bg:            #f4f6fb;
+  --bg-elev:       #ffffff;
+  --bg-elev-2:     #f0f3fa;
+  --line:          #dde3ee;
+  --line-soft:     #e8edf6;
+  --text:          #131824;
+  --text-dim:      #5a6580;
+  --text-faint:    #8b95ac;
+  --accent:        #2f62e6;
+  --accent-soft:   rgba(47, 98, 230, .12);
+  --accent-glow:   rgba(47, 98, 230, .28);
+  --active-bg:     rgba(47, 98, 230, .09);
+  --danger:        #d93838;
+  --shadow:        0 16px 40px rgba(20, 32, 60, .14);
+}
+
+* { box-sizing: border-box; }
+
+/* l attribut hidden doit primer sur les display: grid/flex ci-dessous */
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Inter, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.muted { color: var(--text-dim); }
